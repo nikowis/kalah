@@ -148,10 +148,30 @@ class KalahTest {
     }
 
     @Test
+    public void testMoveChangesWhoseTurnWhenFinishedInARegularPit() {
+        Kalah kalah = new Kalah();
+        kalah.whoseTurn = Turn.P1;
+
+        kalah.move(Kalah.FIRST_PIT_IDX + 2);
+
+        Assertions.assertEquals(Turn.P2, kalah.whoseTurn, "Whose turn should change after a move");
+    }
+
+    @Test
+    public void testMoveDoesntChangeWhoseTurnWhenFinishedInPlayersHouse() {
+        Kalah kalah = new Kalah();
+        kalah.whoseTurn = Turn.P1;
+
+        kalah.move(Kalah.FIRST_PIT_IDX);
+
+        Assertions.assertEquals(Turn.P1, kalah.whoseTurn, "Whose turn shouldn't change when move finished in a house");
+    }
+
+    @Test
     public void testGetNextPitIdx() {
-        Assertions.assertEquals(2, Kalah.getNextPitIdx(1));
-        Assertions.assertEquals(14, Kalah.getNextPitIdx(13));
-        Assertions.assertEquals(1, Kalah.getNextPitIdx(14));
+        Assertions.assertEquals(Kalah.FIRST_PIT_IDX + 1, Kalah.getNextPitIdx(Kalah.FIRST_PIT_IDX));
+        Assertions.assertEquals(Kalah.P2_HOUSE_IDX, Kalah.getNextPitIdx(Kalah.P2_HOUSE_IDX - 1));
+        Assertions.assertEquals(Kalah.FIRST_PIT_IDX, Kalah.getNextPitIdx(Kalah.P2_HOUSE_IDX));
     }
 
 }

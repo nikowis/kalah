@@ -1,4 +1,4 @@
 package com.nikowis.kalah.exceptions;
 
-public class NotYourPitException extends GameException{
+public class NotYourPitException extends GameException {
 }
