@@ -35,9 +35,39 @@ public class Kalah {
         Integer stonesInHand = removeStones(selectedPit);
         int lastPit = sowStones(selectedPit, stonesInHand);
 
+        if(isEligibleToCaptureOppositePit(lastPit)) {
+            captureOppositePit(lastPit);
+        }
+
         if (isNotAHousePit(lastPit)) {
             changeTurns();
         }
+    }
+
+    private void captureOppositePit(int pit) {
+        Integer selfStones = removeStones(pit);
+        Integer capturedStones = removeStones(getOppositePitIdx(pit));
+        moveStonesToPlayersHouse(selfStones + capturedStones);
+    }
+
+    private void moveStonesToPlayersHouse(int stones) {
+        if(Turn.P1.equals(whoseTurn)) {
+            pits.put(P1_HOUSE_IDX, pits.get(P1_HOUSE_IDX) + stones);
+        } else {
+            pits.put(P2_HOUSE_IDX, pits.get(P2_HOUSE_IDX) + stones);
+        }
+    }
+
+    private boolean isEligibleToCaptureOppositePit(int pit) {
+        return isPlayersRegularPit(pit) && wasEmptyBeforeTheMove(pit);
+    }
+
+    private boolean wasEmptyBeforeTheMove(int pit) {
+        return pits.get(pit) == 1;
+    }
+
+    private boolean isPlayersRegularPit(int pit) {
+        return !isOpponentsPit(pit) && !isHousePit(pit);
     }
 
     private void changeTurns() {
@@ -93,12 +123,20 @@ public class Kalah {
     }
 
     private boolean isOpponentsHouse(int nextPit) {
-        return (Turn.P1.equals(whoseTurn) && nextPit == P2_HOUSE_IDX) || (Turn.P2.equals(whoseTurn) && nextPit == P1_HOUSE_IDX);
+        return (Turn.P1.equals(whoseTurn) && P2_HOUSE_IDX.equals(nextPit)) || (Turn.P2.equals(whoseTurn) && P1_HOUSE_IDX.equals(nextPit));
     }
 
     @VisibleForTesting
     static int getNextPitIdx(int pit) {
-        return pit == P2_HOUSE_IDX ? FIRST_PIT_IDX : pit + 1;
+        return P2_HOUSE_IDX.equals(pit) ? FIRST_PIT_IDX : pit + 1;
+    }
+
+    @VisibleForTesting
+    static int getOppositePitIdx(int pit) {
+        if(P1_HOUSE_IDX.equals(pit) || P2_HOUSE_IDX.equals(pit)) {
+            throw new IllegalArgumentException("Houses do not have opposite pits");
+        }
+        return P2_HOUSE_IDX - pit;
     }
 
 }
