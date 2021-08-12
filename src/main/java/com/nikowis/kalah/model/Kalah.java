@@ -32,29 +32,41 @@ public class Kalah {
     @VisibleForTesting
     Turn whoseTurn;
 
-    public void move(int movePit) {
-        if(P1_HOUSE_IDX.equals(movePit) || P2_HOUSE_IDX.equals(movePit)) {
+    public void move(int selectedPit) {
+        if(isHousePit(selectedPit)) {
             throw new CantMoveHouseException();
         }
-        if((Turn.P1.equals(whoseTurn) && movePit > P1_HOUSE_IDX) || (Turn.P2.equals(whoseTurn) && movePit < P1_HOUSE_IDX)) {
+        if(isOpponentsPit(selectedPit)) {
             throw new NotYourPitException();
         }
-        Integer stones = pits.get(movePit);
-        if(stones == 0) {
+        Integer stonesInHand = pits.get(selectedPit);
+        if(stonesInHand == 0) {
             throw new CantMoveFromEmptyPitException();
         }
+        pits.put(selectedPit, 0);
 
-        pits.put(movePit, 0);
-        int nextPit = getNextPitIdx(movePit);
-        while(stones > 0) {
-            if((Turn.P1.equals(whoseTurn) && nextPit == P2_HOUSE_IDX) || (Turn.P2.equals(whoseTurn) && nextPit == P1_HOUSE_IDX)) {
+        int nextPit = getNextPitIdx(selectedPit);
+        while(stonesInHand > 0) {
+            if(isOpponentsHouse(nextPit)) {
                 nextPit = getNextPitIdx(nextPit);
                 continue;
             }
             pits.put(nextPit, pits.get(nextPit) + 1);
-            stones--;
+            stonesInHand--;
             nextPit = getNextPitIdx(nextPit);
         }
+    }
+
+    private boolean isOpponentsPit(int pit) {
+        return (Turn.P1.equals(whoseTurn) && pit > P1_HOUSE_IDX) || (Turn.P2.equals(whoseTurn) && pit < P1_HOUSE_IDX);
+    }
+
+    private boolean isHousePit(int pit) {
+        return P1_HOUSE_IDX.equals(pit) || P2_HOUSE_IDX.equals(pit);
+    }
+
+    private boolean isOpponentsHouse(int nextPit) {
+        return (Turn.P1.equals(whoseTurn) && nextPit == P2_HOUSE_IDX) || (Turn.P2.equals(whoseTurn) && nextPit == P1_HOUSE_IDX);
     }
 
     @VisibleForTesting
