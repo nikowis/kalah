@@ -2,6 +2,7 @@ package com.nikowis.kalah.model;
 
 import com.nikowis.kalah.exceptions.CantMoveFromEmptyPitException;
 import com.nikowis.kalah.exceptions.CantMoveHouseException;
+import com.nikowis.kalah.exceptions.GameFinishedException;
 import com.nikowis.kalah.exceptions.NotYourPitException;
 import org.assertj.core.util.VisibleForTesting;
 
@@ -18,40 +19,89 @@ public class Kalah {
 
     public Kalah() {
         pits = new HashMap<>();
-        for (int i = FIRST_PIT_IDX; i <= FIRST_PIT_IDX + 2 * PLAYER_PITS + 1; i++) {
+        for (int i = FIRST_PIT_IDX; i <= P2_HOUSE_IDX; i++) {
             pits.put(i, i == P1_HOUSE_IDX || i == P2_HOUSE_IDX ? 0 : INITIAL_STONE_COUNT);
         }
 
-        whoseTurn = Turn.P1;
+        whoseTurn = Player.P1;
     }
 
     @VisibleForTesting
     Map<Integer, Integer> pits;
     @VisibleForTesting
-    Turn whoseTurn;
+    Player whoseTurn;
+    @VisibleForTesting
+    boolean gameFinished;
+    @VisibleForTesting
+    Player winner;
 
     public void move(int selectedPit) {
         validateMove(selectedPit);
         Integer stonesInHand = removeStones(selectedPit);
         int lastPit = sowStones(selectedPit, stonesInHand);
 
-        if(isEligibleToCaptureOppositePit(lastPit)) {
-            captureOppositePit(lastPit);
+        if (isEligibleToCaptureOppositePit(lastPit)) {
+            captureAndMoveStones(lastPit);
         }
 
         if (isNotAHousePit(lastPit)) {
             changeTurns();
         }
+
+        if (gameCanBeFinished()) {
+            gameFinished = true;
+            moveAllStonesToHouses();
+            winner = selectWinner();
+        }
+
     }
 
-    private void captureOppositePit(int pit) {
+    private void moveAllStonesToHouses() {
+        int p1RemainingStones = 0, p2RemainingStones = 0;
+        for (int i = FIRST_PIT_IDX; i < P2_HOUSE_IDX; i++) {
+            if (i < P1_HOUSE_IDX) {
+                p1RemainingStones += removeStones(i);
+            } else if (i > P1_HOUSE_IDX) {
+                p2RemainingStones += removeStones(i);
+            }
+        }
+
+        pits.put(P1_HOUSE_IDX, pits.get(P1_HOUSE_IDX) + p1RemainingStones);
+        pits.put(P2_HOUSE_IDX, pits.get(P2_HOUSE_IDX) + p2RemainingStones);
+    }
+
+    private Player selectWinner() {
+        Integer p1Stones = pits.get(P1_HOUSE_IDX);
+        Integer p2Stones = pits.get(P2_HOUSE_IDX);
+
+        if (p1Stones > p2Stones) {
+            return Player.P1;
+        } else if (p2Stones > p1Stones) {
+            return Player.P2;
+        }
+        return null;
+    }
+
+    private boolean gameCanBeFinished() {
+        return p1DoesntHaveStonesInPits() || p2DoesntHaveStonesInPits();
+    }
+
+    private boolean p1DoesntHaveStonesInPits() {
+        return !pits.entrySet().stream().filter(e -> e.getKey() < P1_HOUSE_IDX).anyMatch(e -> e.getValue() > 0);
+    }
+
+    private boolean p2DoesntHaveStonesInPits() {
+        return !pits.entrySet().stream().filter(e -> e.getKey() > P1_HOUSE_IDX && e.getKey() < P2_HOUSE_IDX).anyMatch(e -> e.getValue() > 0);
+    }
+
+    private void captureAndMoveStones(int pit) {
         Integer selfStones = removeStones(pit);
         Integer capturedStones = removeStones(getOppositePitIdx(pit));
         moveStonesToPlayersHouse(selfStones + capturedStones);
     }
 
     private void moveStonesToPlayersHouse(int stones) {
-        if(Turn.P1.equals(whoseTurn)) {
+        if (Player.P1.equals(whoseTurn)) {
             pits.put(P1_HOUSE_IDX, pits.get(P1_HOUSE_IDX) + stones);
         } else {
             pits.put(P2_HOUSE_IDX, pits.get(P2_HOUSE_IDX) + stones);
@@ -71,10 +121,10 @@ public class Kalah {
     }
 
     private void changeTurns() {
-        if (Turn.P1.equals(whoseTurn)) {
-            whoseTurn = Turn.P2;
+        if (Player.P1.equals(whoseTurn)) {
+            whoseTurn = Player.P2;
         } else {
-            whoseTurn = Turn.P1;
+            whoseTurn = Player.P1;
         }
     }
 
@@ -102,6 +152,9 @@ public class Kalah {
     }
 
     private void validateMove(int selectedPit) {
+        if (gameFinished) {
+            throw new GameFinishedException();
+        }
         if (isHousePit(selectedPit)) {
             throw new CantMoveHouseException();
         }
@@ -115,7 +168,7 @@ public class Kalah {
     }
 
     private boolean isOpponentsPit(int pit) {
-        return (Turn.P1.equals(whoseTurn) && pit > P1_HOUSE_IDX) || (Turn.P2.equals(whoseTurn) && pit < P1_HOUSE_IDX);
+        return (Player.P1.equals(whoseTurn) && pit > P1_HOUSE_IDX) || (Player.P2.equals(whoseTurn) && pit < P1_HOUSE_IDX);
     }
 
     private boolean isHousePit(int pit) {
@@ -123,7 +176,7 @@ public class Kalah {
     }
 
     private boolean isOpponentsHouse(int nextPit) {
-        return (Turn.P1.equals(whoseTurn) && P2_HOUSE_IDX.equals(nextPit)) || (Turn.P2.equals(whoseTurn) && P1_HOUSE_IDX.equals(nextPit));
+        return (Player.P1.equals(whoseTurn) && P2_HOUSE_IDX.equals(nextPit)) || (Player.P2.equals(whoseTurn) && P1_HOUSE_IDX.equals(nextPit));
     }
 
     @VisibleForTesting
@@ -133,7 +186,7 @@ public class Kalah {
 
     @VisibleForTesting
     static int getOppositePitIdx(int pit) {
-        if(P1_HOUSE_IDX.equals(pit) || P2_HOUSE_IDX.equals(pit)) {
+        if (P1_HOUSE_IDX.equals(pit) || P2_HOUSE_IDX.equals(pit)) {
             throw new IllegalArgumentException("Houses do not have opposite pits");
         }
         return P2_HOUSE_IDX - pit;

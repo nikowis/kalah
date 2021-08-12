@@ -2,6 +2,7 @@ package com.nikowis.kalah.model;
 
 import com.nikowis.kalah.exceptions.CantMoveFromEmptyPitException;
 import com.nikowis.kalah.exceptions.CantMoveHouseException;
+import com.nikowis.kalah.exceptions.GameFinishedException;
 import com.nikowis.kalah.exceptions.NotYourPitException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -61,7 +62,21 @@ class KalahTest {
     public void testCreateGameWhoseTurnInitialized() {
         Kalah kalah = new Kalah();
 
-        Assertions.assertEquals(Turn.P1, kalah.whoseTurn, "P1 should go first");
+        Assertions.assertEquals(Player.P1, kalah.whoseTurn, "P1 should go first");
+    }
+
+    @Test
+    public void testCreateGameNotFinished() {
+        Kalah kalah = new Kalah();
+
+        Assertions.assertFalse(kalah.gameFinished, "Game should initialize unfinished");
+    }
+
+    @Test
+    public void testCreateGameNoWinner() {
+        Kalah kalah = new Kalah();
+
+        Assertions.assertNull(kalah.winner, "Game should initialize without a winner");
     }
 
     @Test
@@ -86,7 +101,7 @@ class KalahTest {
     public void testMoveSkipsOpponentsHouseP1() {
         Kalah kalah = new Kalah();
         kalah.pits = arrayToKalahState(new int[]{1, 1, 1, 1, 1, 8, 0, 1, 1, 1, 1, 1, 1, 0});
-        kalah.whoseTurn = Turn.P1;
+        kalah.whoseTurn = Player.P1;
 
         kalah.move(6);
 
@@ -97,7 +112,7 @@ class KalahTest {
     public void testMoveSkipsOpponentsHouseP2() {
         Kalah kalah = new Kalah();
         kalah.pits = arrayToKalahState(new int[]{1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 8, 0});
-        kalah.whoseTurn = Turn.P2;
+        kalah.whoseTurn = Player.P2;
 
         kalah.move(13);
 
@@ -108,7 +123,7 @@ class KalahTest {
     public void testCantMoveFromEmpty() {
         Kalah kalah = new Kalah();
         kalah.pits = arrayToKalahState(new int[]{0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
-        kalah.whoseTurn = Turn.P1;
+        kalah.whoseTurn = Player.P1;
 
         Assertions.assertThrows(CantMoveFromEmptyPitException.class, () -> kalah.move(Kalah.FIRST_PIT_IDX), "Can't select an empty pit in a move");
     }
@@ -117,7 +132,7 @@ class KalahTest {
     public void testCantMoveOtherPlayersPitP1() {
         Kalah kalah = new Kalah();
         kalah.pits = arrayToKalahState(new int[]{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
-        kalah.whoseTurn = Turn.P1;
+        kalah.whoseTurn = Player.P1;
 
         Assertions.assertThrows(NotYourPitException.class, () -> kalah.move(Kalah.P1_HOUSE_IDX + 1), "Shouldn't allow player to move other player pit");
     }
@@ -126,7 +141,7 @@ class KalahTest {
     public void testCantMoveOtherPlayersPitP2() {
         Kalah kalah = new Kalah();
         kalah.pits = arrayToKalahState(new int[]{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
-        kalah.whoseTurn = Turn.P2;
+        kalah.whoseTurn = Player.P2;
 
         Assertions.assertThrows(NotYourPitException.class, () -> kalah.move(Kalah.FIRST_PIT_IDX), "Shouldn't allow player to move other player pit");
     }
@@ -135,7 +150,7 @@ class KalahTest {
     public void testCantMoveHouseP1() {
         Kalah kalah = new Kalah();
         kalah.pits = arrayToKalahState(new int[]{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
-        kalah.whoseTurn = Turn.P1;
+        kalah.whoseTurn = Player.P1;
 
         Assertions.assertThrows(CantMoveHouseException.class, () -> kalah.move(Kalah.P1_HOUSE_IDX), "Can't select house pit in a move");
     }
@@ -144,7 +159,7 @@ class KalahTest {
     public void testCantMoveHouseP2() {
         Kalah kalah = new Kalah();
         kalah.pits = arrayToKalahState(new int[]{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
-        kalah.whoseTurn = Turn.P2;
+        kalah.whoseTurn = Player.P2;
 
         Assertions.assertThrows(CantMoveHouseException.class, () -> kalah.move(Kalah.P2_HOUSE_IDX), "Can't select house pit in a move");
     }
@@ -152,28 +167,28 @@ class KalahTest {
     @Test
     public void testMoveChangesWhoseTurnWhenFinishedInARegularPit() {
         Kalah kalah = new Kalah();
-        kalah.whoseTurn = Turn.P1;
+        kalah.whoseTurn = Player.P1;
 
         kalah.move(Kalah.FIRST_PIT_IDX + 2);
 
-        Assertions.assertEquals(Turn.P2, kalah.whoseTurn, "Whose turn should change after a move");
+        Assertions.assertEquals(Player.P2, kalah.whoseTurn, "Whose turn should change after a move");
     }
 
     @Test
     public void testMoveDoesntChangeWhoseTurnWhenFinishedInPlayersHouse() {
         Kalah kalah = new Kalah();
-        kalah.whoseTurn = Turn.P1;
+        kalah.whoseTurn = Player.P1;
 
         kalah.move(Kalah.FIRST_PIT_IDX);
 
-        Assertions.assertEquals(Turn.P1, kalah.whoseTurn, "Whose turn shouldn't change when move finished in a house");
+        Assertions.assertEquals(Player.P1, kalah.whoseTurn, "Whose turn shouldn't change when move finished in a house");
     }
 
     @Test
     public void testMoveCapturesCorrectly() {
         Kalah kalah = new Kalah();
         kalah.pits = arrayToKalahState(new int[]{0, 1, 1, 1, 1, 8, 0, 1, 1, 1, 1, 1, 3, 0});
-        kalah.whoseTurn = Turn.P1;
+        kalah.whoseTurn = Player.P1;
 
         kalah.move(6);
 
@@ -184,7 +199,7 @@ class KalahTest {
     public void testMoveSecondPlayerCanCapture() {
         Kalah kalah = new Kalah();
         kalah.pits = arrayToKalahState(new int[]{1, 1, 17, 1, 1, 0, 77, 5, 1, 1, 0, 12, 2, 0});
-        kalah.whoseTurn = Turn.P2;
+        kalah.whoseTurn = Player.P2;
 
         kalah.move(12);
 
@@ -195,11 +210,84 @@ class KalahTest {
     public void testMoveFinishesInOpponentsEmptyPitDoesntCapture() {
         Kalah kalah = new Kalah();
         kalah.pits = arrayToKalahState(new int[]{7, 7, 7, 7, 7, 3, 7, 1, 0, 1, 1, 1, 1, 1});
-        kalah.whoseTurn = Turn.P1;
+        kalah.whoseTurn = Player.P1;
 
         kalah.move(6);
 
-        kalah.pits = arrayToKalahState(new int[]{7, 7, 7, 7, 7, 0, 8, 2, 1, 1, 1, 1, 1, 1});
+        assertKalahState(new int[]{7, 7, 7, 7, 7, 0, 8, 2, 1, 1, 1, 1, 1, 1}, kalah);
+    }
+
+    @Test
+    public void testLastMoveShouldFinishGameSetWinnerAndMoveAllStones() {
+        Kalah kalah = new Kalah();
+        kalah.pits = arrayToKalahState(new int[]{0, 0, 0, 0, 0, 1, 14, 1, 1, 1, 1, 1, 1, 5});
+        kalah.whoseTurn = Player.P1;
+
+        kalah.move(6);
+
+        Assertions.assertEquals(Player.P1, kalah.winner, "Winner should selected properly");
+        Assertions.assertTrue(kalah.gameFinished, "Game should be finished");
+        assertKalahState(new int[]{0, 0, 0, 0, 0, 0, 15, 0, 0, 0, 0, 0, 0, 11}, kalah);
+    }
+
+    @Test
+    public void testLastMoveOppositePlayerWins() {
+        Kalah kalah = new Kalah();
+        kalah.pits = arrayToKalahState(new int[]{0, 0, 0, 0, 0, 1, 14, 2, 2, 2, 2, 2, 2, 5});
+        kalah.whoseTurn = Player.P1;
+
+        kalah.move(6);
+
+        Assertions.assertEquals(Player.P2, kalah.winner, "Winner should selected properly");
+        Assertions.assertTrue(kalah.gameFinished, "Game should be finished");
+        assertKalahState(new int[]{0, 0, 0, 0, 0, 0, 15, 0, 0, 0, 0, 0, 0, 17}, kalah);
+    }
+
+    @Test
+    public void testLastMoveWithCapture() {
+        Kalah kalah = new Kalah();
+        kalah.pits = arrayToKalahState(new int[]{0, 0, 0, 0, 0, 8, 14, 1, 1, 1, 1, 1, 3, 5});
+        kalah.whoseTurn = Player.P1;
+
+        kalah.move(6);
+
+        Assertions.assertEquals(Player.P1, kalah.winner, "Winner should selected properly");
+        Assertions.assertTrue(kalah.gameFinished, "Game should be finished");
+        assertKalahState(new int[]{0, 0, 0, 0, 0, 0, 20, 0, 0, 0, 0, 0, 0, 15}, kalah);
+    }
+
+    @Test
+    public void testMoveCapturesOpponentsLastStonesAndEndsGame() {
+        Kalah kalah = new Kalah();
+        kalah.pits = arrayToKalahState(new int[]{1, 0, 1, 1, 1, 1, 10, 0, 0, 0, 0, 15, 0, 5});
+        kalah.whoseTurn = Player.P1;
+
+        kalah.move(1);
+
+        Assertions.assertEquals(Player.P1, kalah.winner, "Winner should selected properly");
+        Assertions.assertTrue(kalah.gameFinished, "Game should be finished");
+        assertKalahState(new int[]{0, 0, 0, 0, 0, 0, 30, 0, 0, 0, 0, 0, 0, 5}, kalah);
+    }
+
+    @Test
+    public void testGameFinishedWithDraw() {
+        Kalah kalah = new Kalah();
+        kalah.pits = arrayToKalahState(new int[]{0, 0, 0, 0, 1, 0, 8, 1, 0, 0, 0, 0, 0, 10});
+        kalah.whoseTurn = Player.P1;
+
+        kalah.move(5);
+
+        Assertions.assertNull(kalah.winner, "When there is a draw then no winner should be selected");
+        Assertions.assertTrue(kalah.gameFinished, "Game should be finished");
+        assertKalahState(new int[]{0, 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 10}, kalah);
+    }
+
+    @Test
+    public void testMoveAfterGameFinishedThrowsException() {
+        Kalah kalah = new Kalah();
+        kalah.gameFinished = true;
+
+        Assertions.assertThrows(GameFinishedException.class, () -> kalah.move(6), "Shouldn't allow to move in a finished game");
     }
 
     @Test
