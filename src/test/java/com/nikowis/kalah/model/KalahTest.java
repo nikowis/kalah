@@ -1,9 +1,6 @@
 package com.nikowis.kalah.model;
 
-import com.nikowis.kalah.exceptions.CantMoveFromEmptyPitException;
-import com.nikowis.kalah.exceptions.CantMoveHouseException;
-import com.nikowis.kalah.exceptions.GameFinishedException;
-import com.nikowis.kalah.exceptions.NotYourPitException;
+import com.nikowis.kalah.exceptions.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -95,6 +92,20 @@ class KalahTest {
         kalah.move(Kalah.FIRST_PIT_IDX);
 
         assertKalahState(new int[]{0, 7, 7, 7, 7, 7, 1, 6, 6, 6, 6, 6, 6, 0}, kalah);
+    }
+
+    @Test
+    public void testMoveOutOfBoundsOver() {
+        Kalah kalah = new Kalah();
+
+        Assertions.assertThrows(PitOutOfBoundsException.class, () -> kalah.move(Kalah.P2_HOUSE_IDX + 1), "Shouldn't move out of bounds");
+    }
+
+    @Test
+    public void testMoveOutOfBoundsUnder() {
+        Kalah kalah = new Kalah();
+
+        Assertions.assertThrows(PitOutOfBoundsException.class, () -> kalah.move(Kalah.FIRST_PIT_IDX - 1), "Shouldn't move out of bounds");
     }
 
     @Test

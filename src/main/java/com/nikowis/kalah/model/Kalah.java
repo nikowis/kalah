@@ -1,9 +1,6 @@
 package com.nikowis.kalah.model;
 
-import com.nikowis.kalah.exceptions.CantMoveFromEmptyPitException;
-import com.nikowis.kalah.exceptions.CantMoveHouseException;
-import com.nikowis.kalah.exceptions.GameFinishedException;
-import com.nikowis.kalah.exceptions.NotYourPitException;
+import com.nikowis.kalah.exceptions.*;
 import org.assertj.core.util.VisibleForTesting;
 
 import java.util.HashMap;
@@ -128,12 +125,12 @@ public class Kalah {
         }
     }
 
-    private boolean isNotAHousePit(int lastPit) {
-        return !P1_HOUSE_IDX.equals(lastPit) && !P2_HOUSE_IDX.equals(lastPit);
+    private boolean isNotAHousePit(int pit) {
+        return !P1_HOUSE_IDX.equals(pit) && !P2_HOUSE_IDX.equals(pit);
     }
 
-    private int sowStones(int selectedPit, Integer stonesInHand) {
-        int nextPit = selectedPit;
+    private int sowStones(int fromPit, Integer stonesInHand) {
+        int nextPit = fromPit;
         while (stonesInHand > 0) {
             nextPit = getNextPitIdx(nextPit);
             if (isOpponentsHouse(nextPit)) {
@@ -145,9 +142,9 @@ public class Kalah {
         return nextPit;
     }
 
-    private Integer removeStones(int selectedPit) {
-        Integer stonesInHand = pits.get(selectedPit);
-        pits.put(selectedPit, 0);
+    private Integer removeStones(int pit) {
+        Integer stonesInHand = pits.get(pit);
+        pits.put(pit, 0);
         return stonesInHand;
     }
 
@@ -155,6 +152,10 @@ public class Kalah {
         if (gameFinished) {
             throw new GameFinishedException();
         }
+        if(isPitOutOfBounds(selectedPit)) {
+            throw new PitOutOfBoundsException();
+        }
+
         if (isHousePit(selectedPit)) {
             throw new CantMoveHouseException();
         }
@@ -167,6 +168,10 @@ public class Kalah {
         }
     }
 
+    private boolean isPitOutOfBounds(int pit) {
+        return pit < FIRST_PIT_IDX || pit > P2_HOUSE_IDX;
+    }
+
     private boolean isOpponentsPit(int pit) {
         return (Player.P1.equals(whoseTurn) && pit > P1_HOUSE_IDX) || (Player.P2.equals(whoseTurn) && pit < P1_HOUSE_IDX);
     }
@@ -175,8 +180,8 @@ public class Kalah {
         return P1_HOUSE_IDX.equals(pit) || P2_HOUSE_IDX.equals(pit);
     }
 
-    private boolean isOpponentsHouse(int nextPit) {
-        return (Player.P1.equals(whoseTurn) && P2_HOUSE_IDX.equals(nextPit)) || (Player.P2.equals(whoseTurn) && P1_HOUSE_IDX.equals(nextPit));
+    private boolean isOpponentsHouse(int pit) {
+        return (Player.P1.equals(whoseTurn) && P2_HOUSE_IDX.equals(pit)) || (Player.P2.equals(whoseTurn) && P1_HOUSE_IDX.equals(pit));
     }
 
     @VisibleForTesting
