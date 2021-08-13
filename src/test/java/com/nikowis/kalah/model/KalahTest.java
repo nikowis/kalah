@@ -1,6 +1,6 @@
 package com.nikowis.kalah.model;
 
-import com.nikowis.kalah.exceptions.*;
+import com.nikowis.kalah.exception.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

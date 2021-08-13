@@ -1,4 +1,4 @@
-package com.nikowis.kalah.exceptions;
+package com.nikowis.kalah.exception;
 
 public class CantMoveHouseException extends GameException {
 }

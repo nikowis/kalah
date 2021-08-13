@@ -1,11 +1,14 @@
 package com.nikowis.kalah.model;
 
-import com.nikowis.kalah.exceptions.*;
+import com.nikowis.kalah.exception.*;
+import lombok.Getter;
 import org.assertj.core.util.VisibleForTesting;
+import org.springframework.data.annotation.Id;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@Getter
 public class Kalah {
 
     static final Integer INITIAL_STONE_COUNT = 6;
@@ -13,6 +16,17 @@ public class Kalah {
     static final Integer PLAYER_PITS = 6;
     static final Integer P1_HOUSE_IDX = FIRST_PIT_IDX + PLAYER_PITS;
     static final Integer P2_HOUSE_IDX = P1_HOUSE_IDX + PLAYER_PITS + 1;
+
+    @Id
+    private String id;
+    @VisibleForTesting
+    Map<Integer, Integer> pits;
+    @VisibleForTesting
+    Player whoseTurn;
+    @VisibleForTesting
+    boolean gameFinished;
+    @VisibleForTesting
+    Player winner;
 
     public Kalah() {
         pits = new HashMap<>();
@@ -23,14 +37,6 @@ public class Kalah {
         whoseTurn = Player.P1;
     }
 
-    @VisibleForTesting
-    Map<Integer, Integer> pits;
-    @VisibleForTesting
-    Player whoseTurn;
-    @VisibleForTesting
-    boolean gameFinished;
-    @VisibleForTesting
-    Player winner;
 
     public void move(int selectedPit) {
         validateMove(selectedPit);
@@ -152,7 +158,7 @@ public class Kalah {
         if (gameFinished) {
             throw new GameFinishedException();
         }
-        if(isPitOutOfBounds(selectedPit)) {
+        if (isPitOutOfBounds(selectedPit)) {
             throw new PitOutOfBoundsException();
         }
 
@@ -182,6 +188,10 @@ public class Kalah {
 
     private boolean isOpponentsHouse(int pit) {
         return (Player.P1.equals(whoseTurn) && P2_HOUSE_IDX.equals(pit)) || (Player.P2.equals(whoseTurn) && P1_HOUSE_IDX.equals(pit));
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     @VisibleForTesting
