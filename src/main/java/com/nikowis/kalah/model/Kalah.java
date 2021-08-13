@@ -190,10 +190,6 @@ public class Kalah {
         return (Player.P1.equals(whoseTurn) && P2_HOUSE_IDX.equals(pit)) || (Player.P2.equals(whoseTurn) && P1_HOUSE_IDX.equals(pit));
     }
 
-    public void setId(String id) {
-        this.id = id;
-    }
-
     @VisibleForTesting
     static int getNextPitIdx(int pit) {
         return P2_HOUSE_IDX.equals(pit) ? FIRST_PIT_IDX : pit + 1;

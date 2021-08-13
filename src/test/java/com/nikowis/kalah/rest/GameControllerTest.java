@@ -1,6 +1,7 @@
 package com.nikowis.kalah.rest;
 
 import com.nikowis.kalah.exception.GlobalExceptionHandler;
+import com.nikowis.kalah.model.Kalah;
 import com.nikowis.kalah.repository.KalahRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,11 +11,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.transaction.annotation.Transactional;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -53,4 +55,25 @@ class GameControllerTest {
 
         Assertions.assertEquals(gamesBeforeRequest + 1, gamesAfterRequest, "Games count should increment by one");
     }
+
+    @Test
+    public void makeAMoveTest() throws Exception {
+        Kalah newGame = kalahRepository.save(new Kalah());
+
+        int pitId = 2;
+        mockMvc.perform(put(GameController.MOVE_ENDPOINT, newGame.getId(), pitId)
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(newGame.getId())))
+                .andExpect(jsonPath("$.url", is(notNullValue())))
+                .andExpect(jsonPath("$.status", is(notNullValue())))
+                .andExpect(jsonPath("$.status.2", is(0)))
+                .andExpect(jsonPath("$.gameFinished", is(false)))
+                .andExpect(jsonPath("$.winner", is(nullValue())));
+
+        Kalah updatedGame = kalahRepository.findById(newGame.getId()).get();
+
+        Assertions.assertEquals(0, updatedGame.getPits().get(pitId), "Pit after a move should be empty");
+    }
+
 }
