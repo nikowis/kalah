@@ -14,6 +14,7 @@ public class GameStateDto {
     private String url;
     private Map<Integer, Integer> status;
     private boolean gameFinished;
+    private Player whoseTurn;
     private Player winner;
 
 }

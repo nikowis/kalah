@@ -2,7 +2,7 @@ package com.nikowis.kalah.service;
 
 import com.nikowis.kalah.dto.GameCreatedDTO;
 import com.nikowis.kalah.dto.GameStateDto;
-import com.nikowis.kalah.exception.GameDoesntExistException;
+import com.nikowis.kalah.exception.GameNotFoundException;
 import com.nikowis.kalah.model.Kalah;
 import com.nikowis.kalah.repository.KalahRepository;
 import org.junit.jupiter.api.Assertions;
@@ -92,6 +92,6 @@ class GameServiceImplTest {
         Integer pitId = 2;
         when(repositoryMock.findById(eq(gameId))).then(inv -> Optional.empty());
 
-        Assertions.assertThrows(GameDoesntExistException.class, () -> gameService.makeAMove(gameId, pitId), "Random game id should throw an exception");
+        Assertions.assertThrows(GameNotFoundException.class, () -> gameService.makeAMove(gameId, pitId), "Random game id should throw an exception");
     }
 }

@@ -1,7 +1,7 @@
 package com.nikowis.kalah.rest;
 
-import com.nikowis.kalah.exception.GlobalExceptionHandler;
 import com.nikowis.kalah.model.Kalah;
+import com.nikowis.kalah.model.Player;
 import com.nikowis.kalah.repository.KalahRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,12 +32,12 @@ class GameControllerTest {
     private KalahRepository kalahRepository;
 
     @Autowired
-    private GlobalExceptionHandler globalExceptionHandler;
+    private RestExceptionHandler exceptionHandler;
 
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(gameController)
-                .setControllerAdvice(globalExceptionHandler)
+                .setControllerAdvice(exceptionHandler)
                 .build();
     }
 
@@ -69,6 +69,7 @@ class GameControllerTest {
                 .andExpect(jsonPath("$.status", is(notNullValue())))
                 .andExpect(jsonPath("$.status.2", is(0)))
                 .andExpect(jsonPath("$.gameFinished", is(false)))
+                .andExpect(jsonPath("$.whoseTurn", is(Player.P2.name())))
                 .andExpect(jsonPath("$.winner", is(nullValue())));
 
         Kalah updatedGame = kalahRepository.findById(newGame.getId()).get();
@@ -76,4 +77,21 @@ class GameControllerTest {
         Assertions.assertEquals(0, updatedGame.getPits().get(pitId), "Pit after a move should be empty");
     }
 
+    @Test
+    public void makeAMoveNonExistingGameTest() throws Exception {
+        mockMvc.perform(put(GameController.MOVE_ENDPOINT, "randomid", 2)
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message", is(notNullValue())));
+    }
+
+    @Test
+    public void makeIncorrectMoveExistingGame() throws Exception {
+        Kalah newGame = kalahRepository.save(new Kalah());
+
+        mockMvc.perform(put(GameController.MOVE_ENDPOINT, newGame.getId(), 200)
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", is(notNullValue())));
+    }
 }
