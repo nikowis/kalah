@@ -3,10 +3,13 @@ package com.nikowis.kalah.rest;
 import com.nikowis.kalah.dto.GameCreatedDTO;
 import com.nikowis.kalah.dto.GameStateDto;
 import com.nikowis.kalah.service.GameService;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -30,15 +33,29 @@ public class GameController {
         this.serverPort = serverPort;
     }
 
+    @ApiResponses(value = {
+            @ApiResponse(code = 201, message = "The game was created successfully"),
+            @ApiResponse(code = 404, message = "The game does not exist"),
+    })
+    @ApiOperation(value = "Create a new game.", notes = "Returns the created game id to use in subsequent requests.")
     @PostMapping
-    public ResponseEntity<GameCreatedDTO> createGame() {
+    @ResponseStatus(HttpStatus.CREATED)
+    public GameCreatedDTO createGame() {
         GameCreatedDTO game = gameService.createGame();
         game.setUrl(getGameUrl(game.getId()));
-        return new ResponseEntity<>(game, HttpStatus.CREATED);
+        return game;
     }
 
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "The move was valid and the new game state is returned"),
+            @ApiResponse(code = 400, message = "The move was not valid", response = RestExceptionHandler.ErrorMessageDTO.class),
+            @ApiResponse(code = 404, message = "The game does not exist"),
+    })
+    @ApiOperation(value = "Make a move in an existing game.")
     @PutMapping(path = MOVE_PATH)
-    public GameStateDto makeAMove(@PathVariable(GAME_ID_VAR) String gameId, @PathVariable(PIT_ID_VAR) Integer pitId) {
+    public GameStateDto makeAMove(@ApiParam(value = "The game id", required = true, example = "6117e3d3f86b8c0285711b65") @PathVariable(GAME_ID_VAR) String gameId
+            , @ApiParam(value = "The selected pit: 1-6 for Player1 and 8-13 for Player2", required = true, example = "3") @PathVariable(PIT_ID_VAR) Integer pitId
+    ) {
         GameStateDto gameState = gameService.makeAMove(gameId, pitId);
         gameState.setUrl(getGameUrl(gameState.getId()));
         return gameState;

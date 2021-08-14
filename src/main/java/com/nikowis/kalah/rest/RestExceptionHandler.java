@@ -44,7 +44,7 @@ public class RestExceptionHandler {
 
     @Getter
     @AllArgsConstructor
-    private static class ErrorMessageDTO {
+    public static class ErrorMessageDTO {
         private final String message;
     }
 
